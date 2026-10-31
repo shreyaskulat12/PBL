@@ -1,0 +1,1415 @@
+Q1:-Lab Manual 1-Breadth-First Search (BFS) and Depth-First Search (DFS) Algorithms.
+Code-
+
+from collections import deque
+
+# Graph representation
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D'],
+    'C': ['A', 'G'],
+    'D': ['B', 'G'],
+    'G': ['C', 'D']
+}
+
+# Breadth First Search
+def bfs(graph, start, goal):
+    queue = deque([[start]])
+    visited = set()
+
+    while queue:
+        path = queue.popleft()
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        if node not in visited:
+            visited.add(node)
+
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    queue.append(path + [neighbor])
+
+    return None
+
+
+# Depth First Search
+def dfs(graph, start, goal):
+    stack = [[start]]
+    visited = set()
+
+    while stack:
+        path = stack.pop()
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        if node not in visited:
+            visited.add(node)
+
+            for neighbor in reversed(graph[node]):
+                if neighbor not in visited:
+                    stack.append(path + [neighbor])
+
+    return None
+
+
+# Main Program
+start = 'A'
+goal = 'G'
+
+print("Breadth First Search (BFS)")
+print("Path:", bfs(graph, start, goal))
+
+print("\nDepth First Search (DFS)")
+print("Path:", dfs(graph, start, goal))
+
+
+Q2:-Lab Manual 2-Implement A* and Greedy Best-First Search for pathfinding on a 2D grid with obstacles.
+
+Code-
+
+import heapq
+import itertools
+
+# 2D Grid
+grid = [
+    ['S', '.', '.', 'X', '.'],
+    ['.', 'X', '.', 'X', '.'],
+    ['.', '.', '.', '.', '.'],
+    ['X', 'X', '.', 'X', '.'],
+    ['.', '.', '.', '.', 'G']
+]
+
+start = (0, 0)
+goal = (4, 4)
+
+# Manhattan Distance
+def heuristic(node):
+    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+
+
+# Check valid movement
+def get_neighbors(node):
+    directions = [(-1, 0), (1, 0),
+                   (0, -1), (0, 1)]
+
+    neighbors = []
+
+    for dr, dc in directions:
+        r = node[0] + dr
+        c = node[1] + dc
+
+        if (0 <= r < 5 and 0 <= c < 5
+                and grid[r][c] != 'X'):
+            neighbors.append((r, c))
+
+    return neighbors
+
+
+# Reconstruct path
+def get_path(parent, node):
+    path = []
+
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+
+    return path[::-1]
+
+
+# Greedy Best-First Search
+def greedy_best_first_search():
+
+    counter = itertools.count()
+    pq = [(heuristic(start), next(counter), start)]
+
+    visited = set()
+    parent = {start: None}
+
+    while pq:
+        _, _, current = heapq.heappop(pq)
+
+        if current in visited:
+            continue
+
+        if current == goal:
+            return get_path(parent, current)
+
+        visited.add(current)
+
+        for neighbor in get_neighbors(current):
+
+            if neighbor not in visited and neighbor not in parent:
+                parent[neighbor] = current
+
+                heapq.heappush(
+                    pq,
+                    (heuristic(neighbor),
+                     next(counter), neighbor)
+                )
+
+    return None
+
+
+# A* Search
+def a_star_search():
+
+    counter = itertools.count()
+
+    pq = [(heuristic(start), next(counter), start)]
+
+    g_cost = {start: 0}
+    parent = {start: None}
+    visited = set()
+
+    while pq:
+        _, _, current = heapq.heappop(pq)
+
+        if current in visited:
+            continue
+
+        if current == goal:
+            return get_path(parent, current)
+
+        visited.add(current)
+
+        for neighbor in get_neighbors(current):
+
+            new_g = g_cost[current] + 1
+
+            if new_g < g_cost.get(neighbor, float('inf')):
+
+                g_cost[neighbor] = new_g
+                parent[neighbor] = current
+
+                f = new_g + heuristic(neighbor)
+
+                heapq.heappush(
+                    pq,
+                    (f, next(counter), neighbor)
+                )
+
+    return None
+
+
+# Main Program
+print("Greedy Best-First Search:")
+print(greedy_best_first_search())
+
+print("\nA* Search:")
+print(a_star_search())
+
+Q3-Lab Manual 3-Simulate Hill-Climbing and Simulated Annealing for optimization (e.g., N-Queens, Sudoku minimization).
+
+Code-
+
+import random
+import math
+
+# Objective Function
+def objective(x):
+    return (x - 7) ** 2
+
+
+# Hill Climbing Algorithm
+def hill_climbing():
+
+    current = 0
+
+    while True:
+
+        neighbors = [current - 1, current + 1]
+
+        best = min(neighbors, key=objective)
+
+        if objective(best) < objective(current):
+            current = best
+        else:
+            break
+
+    return current
+
+
+# Simulated Annealing Algorithm
+def simulated_annealing():
+
+    random.seed(42)
+
+    current = 0
+    best = current
+
+    temperature = 100
+    cooling_rate = 0.95
+
+    while temperature > 0.1:
+
+        neighbor = current + random.choice([-1, 1])
+
+        change = objective(neighbor) - objective(current)
+
+        if change < 0:
+            current = neighbor
+
+        else:
+            probability = math.exp(-change / temperature)
+
+            if random.random() < probability:
+                current = neighbor
+
+        if objective(current) < objective(best):
+            best = current
+
+        temperature *= cooling_rate
+
+    return best
+
+
+# Main Program
+print("Hill Climbing Algorithm")
+
+hc = hill_climbing()
+
+print("Best Solution:", hc)
+print("Minimum Value:", objective(hc))
+
+print("\nSimulated Annealing Algorithm")
+
+sa = simulated_annealing()
+
+print("Best Solution:", sa)
+print("Minimum Value:", objective(sa))
+
+Q4-Lab Manual 4-Develop a Tic-Tac-Toe AI using Minimax Algorithm with Alpha-Beta Pruning.
+
+Code-
+
+import math
+
+# Create Tic-Tac-Toe board
+board = [" "] * 9
+
+HUMAN = "X"
+AI = "O"
+
+
+# Display board
+def display_board():
+    print()
+    for i in range(0, 9, 3):
+        print(" | ".join(board[i:i+3]))
+        if i < 6:
+            print("--+---+--")
+    print()
+
+
+# Check winner
+def check_winner(player):
+
+    win_positions = [
+        [0, 1, 2], [3, 4, 5],
+        [6, 7, 8], [0, 3, 6],
+        [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ]
+
+    for pos in win_positions:
+        if all(board[i] == player for i in pos):
+            return True
+
+    return False
+
+
+# Check draw
+def is_draw():
+    return " " not in board
+
+
+# Minimax with Alpha-Beta Pruning
+def minimax(is_maximizing, alpha, beta):
+
+    if check_winner(AI):
+        return 1
+
+    if check_winner(HUMAN):
+        return -1
+
+    if is_draw():
+        return 0
+
+    if is_maximizing:
+
+        best_score = -math.inf
+
+        for i in range(9):
+            if board[i] == " ":
+
+                board[i] = AI
+
+                score = minimax(False, alpha, beta)
+
+                board[i] = " "
+
+                best_score = max(best_score, score)
+                alpha = max(alpha, best_score)
+
+                if beta <= alpha:
+                    break
+
+        return best_score
+
+    else:
+
+        best_score = math.inf
+
+        for i in range(9):
+            if board[i] == " ":
+
+                board[i] = HUMAN
+
+                score = minimax(True, alpha, beta)
+
+                board[i] = " "
+
+                best_score = min(best_score, score)
+                beta = min(beta, best_score)
+
+                if beta <= alpha:
+                    break
+
+        return best_score
+
+
+# Find best move for AI
+def best_move():
+
+    best_score = -math.inf
+    move = -1
+
+    for i in range(9):
+        if board[i] == " ":
+
+            board[i] = AI
+
+            score = minimax(False, -math.inf, math.inf)
+
+            board[i] = " "
+
+            if score > best_score:
+                best_score = score
+                move = i
+
+    return move
+
+
+# Main game
+print("TIC-TAC-TOE AI")
+print("You are X and AI is O")
+print("Enter positions from 1 to 9")
+
+while True:
+
+    display_board()
+
+    # Human turn
+    try:
+        pos = int(input("Enter your position (1-9): ")) - 1
+
+        if pos < 0 or pos > 8 or board[pos] != " ":
+            print("Invalid position! Try again.")
+            continue
+
+    except ValueError:
+        print("Please enter a valid number.")
+        continue
+
+    board[pos] = HUMAN
+
+    if check_winner(HUMAN):
+        display_board()
+        print("Congratulations! You Win!")
+        break
+
+    if is_draw():
+        display_board()
+        print("Game Draw!")
+        break
+
+    # AI turn
+    print("AI is thinking...")
+
+    move = best_move()
+    board[move] = AI
+
+    if check_winner(AI):
+        display_board()
+        print("AI Wins!")
+        break
+
+    if is_draw():
+        display_board()
+        print("Game Draw!")
+        break
+
+Q5-Lab Manual 5-Solve a Constraint Satisfaction Problem (CSP), such as Map Coloring, using Backtracking and Forward Checking.
+
+Code-
+
+# Map Coloring using CSP
+
+variables = ['A', 'B', 'C', 'D']
+
+domains = {
+    'A': ['Red', 'Green', 'Blue'],
+    'B': ['Red', 'Green', 'Blue'],
+    'C': ['Red', 'Green', 'Blue'],
+    'D': ['Red', 'Green', 'Blue']
+}
+
+# Neighbor relationships
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A', 'B', 'D'],
+    'D': ['B', 'C']
+}
+
+
+# Check constraints
+def is_valid(variable, color, assignment):
+
+    for neighbor in graph[variable]:
+
+        if neighbor in assignment:
+            if assignment[neighbor] == color:
+                return False
+
+    return True
+
+
+# Backtracking Algorithm
+def backtracking(assignment):
+
+    if len(assignment) == len(variables):
+        return assignment
+
+    for variable in variables:
+
+        if variable not in assignment:
+            break
+
+    for color in domains[variable]:
+
+        if is_valid(variable, color, assignment):
+
+            assignment[variable] = color
+
+            result = backtracking(assignment)
+
+            if result:
+                return result
+
+            del assignment[variable]
+
+    return None
+
+
+# Forward Checking Algorithm
+def forward_checking(assignment, current_domains):
+
+    if len(assignment) == len(variables):
+        return assignment
+
+    for variable in variables:
+
+        if variable not in assignment:
+            break
+
+    for color in current_domains[variable]:
+
+        if is_valid(variable, color, assignment):
+
+            assignment[variable] = color
+
+            # Copy domains
+            new_domains = {
+                v: list(current_domains[v])
+                for v in variables
+            }
+
+            # Remove color from neighbors
+            failure = False
+
+            for neighbor in graph[variable]:
+
+                if neighbor not in assignment:
+
+                    if color in new_domains[neighbor]:
+                        new_domains[neighbor].remove(color)
+
+                    if len(new_domains[neighbor]) == 0:
+                        failure = True
+                        break
+
+            if not failure:
+
+                result = forward_checking(
+                    assignment, new_domains
+                )
+
+                if result:
+                    return result
+
+            del assignment[variable]
+
+    return None
+
+
+# Main Program
+print("MAP COLORING USING CSP")
+
+print("\n1. Backtracking Result:")
+result1 = backtracking({})
+
+print(result1)
+
+print("\n2. Forward Checking Result:")
+result2 = forward_checking({}, domains)
+
+print(result2)
+
+Q6-Lab Manual 6-Wumpus World Simulator using Propositional Logic and Forward Chaining.
+
+Code-
+
+# Wumpus World using Propositional Logic
+# and Forward Chaining
+
+SIZE = 4
+
+# Hidden locations
+PITS = {(4, 4)}
+WUMPUS = (4, 1)
+GOLD = (1, 4)
+
+START = (1, 1)
+
+# Generate all grid cells
+all_cells = {
+    (r, c)
+    for r in range(1, SIZE + 1)
+    for c in range(1, SIZE + 1)
+}
+
+# Knowledge Base
+possible_pits = all_cells - {START}
+possible_wumpus = all_cells - {START}
+
+visited = set()
+safe_cells = {START}
+
+
+# Find neighboring cells
+def get_neighbors(cell):
+
+    r, c = cell
+
+    directions = [
+        (-1, 0),
+        (1, 0),
+        (0, -1),
+        (0, 1)
+    ]
+
+    neighbors = []
+
+    for dr, dc in directions:
+
+        nr = r + dr
+        nc = c + dc
+
+        if 1 <= nr <= SIZE and 1 <= nc <= SIZE:
+            neighbors.append((nr, nc))
+
+    return neighbors
+
+
+# Observe percepts
+def perceive(cell):
+
+    neighbors = get_neighbors(cell)
+
+    breeze = any(n in PITS for n in neighbors)
+
+    stench = any(n == WUMPUS for n in neighbors)
+
+    glitter = (cell == GOLD)
+
+    return breeze, stench, glitter
+
+
+# Forward Chaining
+def forward_chaining():
+
+    while True:
+
+        old_safe = set(safe_cells)
+
+        for cell in visited:
+
+            breeze, stench, glitter = perceive(cell)
+
+            neighbors = get_neighbors(cell)
+
+            # Rule 1: No Breeze
+            if not breeze:
+                possible_pits.difference_update(neighbors)
+
+            # Rule 2: No Stench
+            if not stench:
+                possible_wumpus.difference_update(neighbors)
+
+        # Rule 3: Mark Safe Cells
+        for cell in all_cells:
+
+            if (cell not in possible_pits
+                    and cell not in possible_wumpus):
+
+                safe_cells.add(cell)
+
+        # Stop at fixed point
+        if safe_cells == old_safe:
+            break
+
+
+# Wumpus World Agent
+def wumpus_agent():
+
+    current = START
+
+    print("WUMPUS WORLD SIMULATOR")
+    print("Agent starts at:", START)
+
+    while True:
+
+        visited.add(current)
+
+        # Current cell is safe because agent survived
+        possible_pits.discard(current)
+        possible_wumpus.discard(current)
+
+        breeze, stench, glitter = perceive(current)
+
+        print("\nVisiting:", current)
+        print("Breeze:", breeze)
+        print("Stench:", stench)
+        print("Glitter:", glitter)
+
+        # Check for gold
+        if glitter:
+            print("\nGOLD FOUND!")
+            print("Agent successfully completed the mission.")
+            break
+
+        # Apply Forward Chaining
+        forward_chaining()
+
+        # Find safe unvisited cells
+        next_cells = sorted(safe_cells - visited)
+
+        print("Safe unvisited cells:", next_cells)
+
+        # No safe cell available
+        if not next_cells:
+            print("\nNo safe cells left to explore.")
+            break
+
+        # Move to next safe cell
+        current = next_cells[0]
+
+    print("\nVisited Cells:", sorted(visited))
+
+
+# Main Program
+wumpus_agent()
+
+
+Q7-Lab Manual 7-Parsing First-Order Logic Sentences and Performing Unification, Forward Chaining and Backward Chaining.
+
+Code-
+
+import re
+import itertools
+
+# --------------------------------
+# 1. Parse First-Order Logic
+# --------------------------------
+
+def parse_atom(text):
+    match = re.match(r"(\w+)\((.*)\)", text.strip())
+
+    if not match:
+        raise ValueError("Invalid FOL expression: " + text)
+
+    predicate = match.group(1)
+    args = tuple(
+        arg.strip() for arg in match.group(2).split(",")
+    )
+
+    return (predicate, args)
+
+
+def parse_rule(text):
+    left, right = text.split("=>")
+
+    premises = [
+        parse_atom(p.strip())
+        for p in left.split("&")
+    ]
+
+    conclusion = parse_atom(right.strip())
+
+    return (premises, conclusion)
+
+
+# --------------------------------
+# 2. Unification
+# --------------------------------
+
+def is_variable(term):
+    return term[0].islower()
+
+
+def substitute(term, theta):
+    while is_variable(term) and term in theta:
+        term = theta[term]
+
+    return term
+
+
+def unify_terms(x, y, theta):
+
+    x = substitute(x, theta)
+    y = substitute(y, theta)
+
+    if x == y:
+        return theta
+
+    if is_variable(x):
+        theta[x] = y
+        return theta
+
+    if is_variable(y):
+        theta[y] = x
+        return theta
+
+    return None
+
+
+def unify_atoms(atom1, atom2, theta=None):
+
+    if theta is None:
+        theta = {}
+
+    if atom1[0] != atom2[0]:
+        return None
+
+    if len(atom1[1]) != len(atom2[1]):
+        return None
+
+    theta = theta.copy()
+
+    for x, y in zip(atom1[1], atom2[1]):
+
+        theta = unify_terms(x, y, theta)
+
+        if theta is None:
+            return None
+
+    return theta
+
+
+def apply_substitution(atom, theta):
+
+    return (
+        atom[0],
+        tuple(substitute(arg, theta) for arg in atom[1])
+    )
+
+
+def has_variables(atom):
+    return any(is_variable(x) for x in atom[1])
+
+
+# --------------------------------
+# 3. Knowledge Base
+# --------------------------------
+
+fact_text = [
+    "American(West)",
+    "Missile(M1)",
+    "Owns(Nono,M1)",
+    "Enemy(Nono,America)"
+]
+
+rule_text = [
+    "Missile(x) => Weapon(x)",
+
+    "Enemy(x,America) => Hostile(x)",
+
+    "Missile(x) & Owns(Nono,x) => Sells(West,x,Nono)",
+
+    "American(x) & Weapon(y) & Sells(x,y,z) & Hostile(z) => Criminal(x)"
+]
+
+facts = set(parse_atom(f) for f in fact_text)
+
+rules = [parse_rule(r) for r in rule_text]
+
+
+# --------------------------------
+# 4. Forward Chaining
+# --------------------------------
+
+def match_premises(premises, theta, known_facts):
+
+    if not premises:
+        yield theta
+        return
+
+    first = apply_substitution(premises[0], theta)
+
+    for fact in known_facts:
+
+        new_theta = unify_atoms(first, fact, theta)
+
+        if new_theta is not None:
+
+            yield from match_premises(
+                premises[1:],
+                new_theta,
+                known_facts
+            )
+
+
+def forward_chaining(query):
+
+    changed = True
+
+    while changed:
+
+        changed = False
+
+        for premises, conclusion in rules:
+
+            for theta in match_premises(
+                premises, {}, list(facts)
+            ):
+
+                new_fact = apply_substitution(
+                    conclusion, theta
+                )
+
+                if not has_variables(new_fact):
+
+                    if new_fact not in facts:
+
+                        facts.add(new_fact)
+                        print("Derived:", new_fact)
+                        changed = True
+
+        if query in facts:
+            return True
+
+    return query in facts
+
+
+# --------------------------------
+# 5. Backward Chaining
+# --------------------------------
+
+counter = itertools.count()
+
+
+def standardize_rule(rule):
+
+    premises, conclusion = rule
+
+    variables = set()
+
+    for atom in premises + [conclusion]:
+        for arg in atom[1]:
+            if is_variable(arg):
+                variables.add(arg)
+
+    rename = {
+        v: "v" + str(next(counter)) + v
+        for v in variables
+    }
+
+    def rename_atom(atom):
+        return (
+            atom[0],
+            tuple(rename.get(x, x) for x in atom[1])
+        )
+
+    return (
+        [rename_atom(a) for a in premises],
+        rename_atom(conclusion)
+    )
+
+
+def prove_all(goals, theta, depth=0):
+
+    if not goals:
+        yield theta
+        return
+
+    if depth > 30:
+        return
+
+    first = goals[0]
+    remaining = goals[1:]
+
+    for new_theta in prove(first, theta, depth):
+
+        yield from prove_all(
+            remaining, new_theta, depth + 1
+        )
+
+
+def prove(goal, theta, depth=0):
+
+    if depth > 30:
+        return
+
+    goal = apply_substitution(goal, theta)
+
+    # Check known facts
+    for fact in facts:
+
+        new_theta = unify_atoms(goal, fact, theta)
+
+        if new_theta is not None:
+            yield new_theta
+
+    # Check rules
+    for rule in rules:
+
+        premises, conclusion = standardize_rule(rule)
+
+        new_theta = unify_atoms(
+            goal, conclusion, theta
+        )
+
+        if new_theta is not None:
+
+            yield from prove_all(
+                premises, new_theta, depth + 1
+            )
+
+
+def backward_chaining(query):
+
+    return next(prove(query, {}), None) is not None
+
+
+# --------------------------------
+# 6. Main Program
+# --------------------------------
+
+print("FIRST-ORDER LOGIC REASONING")
+
+# Unification example
+print("\nUnification Example:")
+
+atom1 = parse_atom("Loves(x,Mary)")
+atom2 = parse_atom("Loves(John,Mary)")
+
+print("Atom 1:", atom1)
+print("Atom 2:", atom2)
+print("Substitution:", unify_atoms(atom1, atom2))
+
+
+# Forward Chaining
+query = parse_atom("Criminal(West)")
+
+print("\nForward Chaining:")
+result1 = forward_chaining(query)
+print("Criminal(West):", result1)
+
+
+# Backward Chaining
+print("\nBackward Chaining:")
+result2 = backward_chaining(query)
+print("Criminal(West):", result2)
+
+Q8-Lab Manual 8-Plan Actions Using Classical Planning (STRIPS-like Representation) for a Robot in a Grid World.
+
+Code-
+
+from collections import deque
+
+# Grid size
+SIZE = 4
+
+# Start and Goal
+START = (1, 1)
+GOAL = (4, 4)
+
+# Obstacles
+obstacles = {
+    (2, 2),
+    (2, 3),
+    (3, 2)
+}
+
+# STRIPS Action Representation
+actions = {
+    "MoveUp": (0, 1),
+    "MoveDown": (0, -1),
+    "MoveLeft": (-1, 0),
+    "MoveRight": (1, 0)
+}
+
+
+# Apply STRIPS action
+def apply_action(state, action):
+
+    x, y = state
+
+    dx, dy = actions[action]
+
+    new_state = (x + dx, y + dy)
+
+    # Preconditions
+    if not (1 <= new_state[0] <= SIZE):
+        return None
+
+    if not (1 <= new_state[1] <= SIZE):
+        return None
+
+    if new_state in obstacles:
+        return None
+
+    # Delete-list: At(x, y)
+    # Add-list: At(new_x, new_y)
+
+    return new_state
+
+
+# BFS Planner
+def bfs_planner(start, goal):
+
+    queue = deque([start])
+
+    visited = {start}
+
+    parent = {start: (None, None)}
+
+    while queue:
+
+        current = queue.popleft()
+
+        # Goal checking
+        if current == goal:
+
+            plan = []
+            path = []
+
+            while current is not None:
+
+                path.append(current)
+
+                previous, action = parent[current]
+
+                if action is not None:
+                    plan.append(action)
+
+                current = previous
+
+            return plan[::-1], path[::-1]
+
+        # Generate next states
+        for action in actions:
+
+            new_state = apply_action(
+                current, action
+            )
+
+            if new_state is not None:
+                if new_state not in visited:
+
+                    visited.add(new_state)
+
+                    parent[new_state] = (
+                        current, action
+                    )
+
+                    queue.append(new_state)
+
+    return None, None
+
+
+# Main Program
+print("CLASSICAL PLANNING USING STRIPS")
+
+plan, path = bfs_planner(START, GOAL)
+
+if plan is not None:
+
+    print("\nStart Position:", START)
+    print("Goal Position:", GOAL)
+
+    print("\nAction Plan:")
+
+    for step, action in enumerate(plan, 1):
+        print(step, action)
+
+    print("\nPath:", path)
+
+    print("\nTotal Actions:", len(plan))
+
+else:
+    print("No valid plan found.")
+
+
+
+Q9-Building a Bayesian Network for a Weather-Picnic Domain and Performing Inference Using Bayes' Rule.
+
+Code-
+
+from itertools import product
+
+# Step 1: Define Bayesian Network
+
+nodes = {
+    "Rain": {
+        "parents": [],
+        "cpt": {(): 0.3}
+    },
+
+    "Wind": {
+        "parents": [],
+        "cpt": {(): 0.4}
+    },
+
+    "Picnic": {
+        "parents": ["Rain", "Wind"],
+        "cpt": {
+            (False, False): 0.90,
+            (False, True): 0.60,
+            (True, False): 0.20,
+            (True, True): 0.05
+        }
+    }
+}
+
+ORDER = ["Rain", "Wind", "Picnic"]
+
+
+# Step 2: Calculate probability of True
+
+def prob_true(var, assignment):
+
+    parents = nodes[var]["parents"]
+
+    key = tuple(assignment[p] for p in parents)
+
+    return nodes[var]["cpt"][key]
+
+
+# Step 3: Calculate Joint Probability
+
+def joint_probability(assignment):
+
+    p = 1.0
+
+    for var in ORDER:
+
+        p_true = prob_true(var, assignment)
+
+        if assignment[var]:
+            p *= p_true
+        else:
+            p *= (1 - p_true)
+
+    return p
+
+
+# Step 4: Generate all assignments
+
+def all_assignments(variables):
+
+    for values in product(
+        [True, False], repeat=len(variables)
+    ):
+
+        yield dict(zip(variables, values))
+
+
+# Step 5: Inference using Enumeration
+
+def enumeration_ask(query_var, evidence):
+
+    hidden_vars = [
+        v for v in ORDER
+        if v != query_var and v not in evidence
+    ]
+
+    scores = {}
+
+    for query_value in [True, False]:
+
+        total = 0.0
+
+        for hidden_assignment in all_assignments(
+            hidden_vars
+        ):
+
+            full_assignment = dict(hidden_assignment)
+
+            full_assignment[query_var] = query_value
+
+            full_assignment.update(evidence)
+
+            total += joint_probability(full_assignment)
+
+        scores[query_value] = total
+
+    # Normalize using Bayes' Rule
+
+    normalizer = sum(scores.values())
+
+    return {
+        k: v / normalizer
+        for k, v in scores.items()
+    }
+
+
+# Step 6: Display Results
+
+def show(dist, var_name):
+
+    print(
+        f"P({var_name} = True) = {dist[True]:.4f}"
+    )
+
+    print(
+        f"P({var_name} = False) = {dist[False]:.4f}"
+    )
+
+
+# Step 7: Run Queries
+
+print("Query 1: Overall chance of a picnic")
+
+result1 = enumeration_ask("Picnic", {})
+
+show(result1, "Picnic")
+
+
+print("\nQuery 2: Chance of picnic when it is raining")
+
+result2 = enumeration_ask(
+    "Picnic", {"Rain": True}
+)
+
+show(result2, "Picnic")
+
+
+print("\nQuery 3: Chance of rain when there is no picnic")
+
+result3 = enumeration_ask(
+    "Rain", {"Picnic": False}
+)
+
+show(result3, "Rain")
+
+
+Q10-Lab Manual 10-Training a Decision Tree Classifier on the Iris Dataset using scikit-learn.
+
+Code-
+
+# Decision Tree Classifier using Iris Dataset
+
+# Step 1: Import libraries
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+# Step 2: Load Iris Dataset
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+print("Feature names:", iris.feature_names)
+print("Class names:", iris.target_names)
+print("Dataset shape:", X.shape)
+
+# Step 3: Split Training and Testing Data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.3,
+    random_state=42,
+    stratify=y
+)
+
+print("Training samples:", len(X_train))
+print("Testing samples:", len(X_test))
+
+# Step 4: Create Decision Tree Classifier
+model = DecisionTreeClassifier(
+    criterion="entropy",
+    max_depth=3,
+    random_state=42
+)
+
+# Step 5: Train the Model
+model.fit(X_train, y_train)
+
+# Step 6: Make Predictions
+y_pred = model.predict(X_test)
+
+# Step 7: Evaluate Model
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy * 100, "%")
+
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=iris.target_names
+))
+
+# Step 8: Display Decision Tree Rules
+print("\nDecision Tree Rules:")
+
+rules = export_text(
+    model,
+    feature_names=list(iris.feature_names)
+)
+
+print(rules)
+
+# Step 9: Predict a New Flower
+sample = [[5.0, 3.4, 1.5, 0.2]]
+
+prediction = model.predict(sample)[0]
+
+print("\nNew Flower Prediction:")
+print(iris.target_names[prediction])
+
+Extra-Run in terminal-pip install scikit-learn
